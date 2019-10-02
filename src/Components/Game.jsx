@@ -23,40 +23,46 @@ export default class Game extends Component {
     };
   }
 
-  handleClick(row, column){
-    const {history, isX, step, isEmpty,isWinner} = this.state;
+  handleClick(row, column) {
+    const { history, isX, step, isEmpty, isWinner } = this.state;
+    // return if win or click on checked cell
     if (isWinner)
-      return
-
-    const currentBoard = history[step]
-    const newHistory = history.slice(0, step+1)
-    const squares = currentBoard.squares.slice()
+      return;
+    if (history[step].squares[row][column] != null)
+      return;
+    const currentBoard = history[step];
+    const newHistory = history.slice(0, step + 1);
+    const current = newHistory[newHistory.length - 1];
+    const squares = currentBoard.squares.slice();
+    squares.map((rowTable, index) => {
+      squares[index] = [...current.squares[index]];
+      return true;
+    });
     let isFirstStep;
     if (isEmpty)
-      isFirstStep =false
-    if (!squares[row][column] && !isWinner)
-    {
-      squares[row][column] = isX? 'X' : 'O'
+      isFirstStep = false;
+    if (!squares[row][column] && !isWinner) {
+      squares[row][column] = isX ? 'X' : 'O';
       this.checkIfWinner(squares, row, column);
     }
     this.setState({
       history: newHistory.concat([
         {
           squares,
-          coordinate:{
+          coordinate: {
             row,
             column
           }
         }
       ]),
       isEmpty: isFirstStep,
-      step: step+1,
+      step: step + 1,
       isX: !isX
-    })
+    });
 
   }
 
-  checkIfWinner(squares, row, column){
+  checkIfWinner(squares, row, column) {
     const currentCell = squares[row][column];
     const flags = [-4, -3, -2, -1, 1, 2, 3, 4];
     let counter = 1;
@@ -64,13 +70,10 @@ export default class Game extends Component {
 
     // check vertical
     for (let i = 0; i < flags.length; i += 1) {
-      let rowIndex = row + flags[i]
+      let rowIndex = row + flags[i];
       if (rowIndex < 0 || rowIndex >= 20) {
         counter = 1;
-        continue;
-      }
-
-      if (squares[rowIndex][column] === currentCell) {
+      } else if (squares[rowIndex][column] === currentCell) {
         counter += 1;
         if (counter === 5) {
           if (flags[i] === -1) {
@@ -106,13 +109,10 @@ export default class Game extends Component {
 
     // check horizontal
     for (let i = 0; i < flags.length; i += 1) {
-      let columnIndex = column + flags[i]
+      let columnIndex = column + flags[i];
       if (columnIndex < 0 || columnIndex >= 20) {
         counter = 1;
-        continue;
-      }
-
-      if (squares[row][columnIndex] === currentCell) {
+      } else if (squares[row][columnIndex] === currentCell) {
         counter += 1;
         if (counter === 5) {
           if (flags[i] === -1) {
@@ -121,10 +121,10 @@ export default class Game extends Component {
           }
           if (
             columnIndex + 1 < 20 &&
-            (squares[row][columnIndex+1] !== null &&
-              squares[row][columnIndex+1] !== currentCell) &&
-            (squares[row][columnIndex-5] !== null &&
-              squares[row][columnIndex-5] !== currentCell)
+            (squares[row][columnIndex + 1] !== null &&
+              squares[row][columnIndex + 1] !== currentCell) &&
+            (squares[row][columnIndex - 5] !== null &&
+              squares[row][columnIndex - 5] !== currentCell)
           ) {
             return false;
           }
@@ -159,10 +159,7 @@ export default class Game extends Component {
         columIndex >= 20
       ) {
         counter = 1;
-        continue;
-      }
-
-      if (squares[rowIndex][columIndex] === currentCell) {
+      } else if (squares[rowIndex][columIndex] === currentCell) {
         counter += 1;
         if (counter === 5) {
           if (flags[i] === -1) {
@@ -211,8 +208,7 @@ export default class Game extends Component {
         columnIndex >= 20
       ) {
         counter = 1;
-      }
-      else if (squares[rowIndex][columnIndex] === currentCell) {
+      } else if (squares[rowIndex][columnIndex] === currentCell) {
         counter += 1;
         if (counter === 5) {
           if (flags[i] === -1) {
@@ -254,7 +250,7 @@ export default class Game extends Component {
 
   }
 
-  handleResetClick(){
+  handleResetClick() {
     this.setState({
       history: [
         {
@@ -270,38 +266,88 @@ export default class Game extends Component {
     });
   }
 
+  jumpTo(step) {
+    const { isWinner } = this.state;
+    if (isWinner) {
+      return;
+    }
+    this.setState({
+      step,
+      isX: step % 2 === 0
+    });
+  }
+
   render() {
-    const { history, step, isWinner, isX, isEmpty } = this.state;
+    const { history, step, isWinner, isX, isEmpty, isReverse, listCellsWin } = this.state;
     const currentBoard = history[step];
+    let classtoHightLightStep;
+    let stepAction = history.map((currentStep, move) => {
+      if (move === 0) {
+        return true;
+      }
+      const desc = `Bước #${move} (${currentStep.coordinate.row}, ${currentStep.coordinate.column})`;
+      if (step === move) {
+        classtoHightLightStep = 'btn-bold';
+      }
+      return (
+        <div key={`step_${move}`}>
+          <button
+            className={classtoHightLightStep}
+            type="button"
+            onClick={() => this.jumpTo(move)}
+          >
+            {desc}
+          </button>
+        </div>
+      );
+    });
+
+    if (isReverse) {
+      stepAction = stepAction.reverse();
+    }
 
     let status;
-    if (isEmpty){
+    if (isEmpty) {
       status = <div className="status">
         {'X đánh đầu tiên'}
-      </div>
-    }
-    else if (isWinner){
+      </div>;
+    } else if (isWinner) {
       status = <div className="status">
         {'Người chiến thắng là: '}
-        {isX? 'O' : 'X'}
-      </div>
+        {isX ? 'O' : 'X'}
+      </div>;
     } else {
       status = <div className="status">
         {'Lượt tiếp theo: : '}
-        {isX? 'X' : 'O'}
-      </div>
+        {isX ? 'X' : 'O'}
+      </div>;
     }
 
     return (
       <div className="game">
-        <Board squares={currentBoard.squares} onClick={(row,column)=>{this.handleClick(row,column)}}/>
+        <Board squares={currentBoard.squares} onClick={(row, column) => {
+          this.handleClick(row, column);
+        }} isWinner={isWinner} listCellsWin={listCellsWin} isX={isX}/>
         <div className="game-info">
           {status}
           <div>
-            <button type="button" onClick={this.handleResetClick}>
+            <button type="button" onClick={() => this.handleResetClick()}>
               Chơi lại
             </button>
           </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                this.setState({
+                  isReverse: !isReverse
+                });
+              }}
+            >
+              Reverse
+            </button>
+          </div>
+          <div className="step-action">{stepAction}</div>
         </div>
 
 
