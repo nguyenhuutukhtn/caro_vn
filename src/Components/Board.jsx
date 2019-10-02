@@ -12,7 +12,7 @@ export default class Board extends Component {
                       <div className="board-row" key={`row_${rowIndex}`}>
                           {row.map((column,columnIndex)=>{
                               return (
-                                <Square value={column} key={`column_${columnIndex}`} onClick = {()=>this.props.onClick(row,column)}/>
+                                <Square value={column} key={`column_${columnIndex}`} onClick = {()=>this.props.onClick(rowIndex,columnIndex)}/>
                               )
                           })}
                       </div>
